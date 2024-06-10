@@ -9,14 +9,7 @@
 #include <string.h>
 
 #include "pageinfo.h"
-
-extern FILE *debugfp;
-#define DEBUG(...) \
-    do { \
-        if(debugfp != NULL) { \
-            fprintf(debugfp, "[nocache] DEBUG: " __VA_ARGS__); \
-        } \
-    } while(0)
+#include "nocache.h"
 
 static int insert_into_br_list(struct file_pageinfo *pi,
     struct byterange **brtail, size_t pos, size_t len);

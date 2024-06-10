@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@
 
 #include "pageinfo.h"
 #include "fcntl_helpers.h"
+#include "nocache.h"
 
 static void init(void) __attribute__((constructor));
 static void destroy(void) __attribute__((destructor));
@@ -71,8 +73,8 @@ static char *env_nr_fadvise = "NOCACHE_NR_FADVISE";
 static int nr_fadvise;
 
 static char *env_debugfd = "NOCACHE_DEBUGFD";
-int debugfd = -1;
-FILE *debugfp;
+static int debugfd = -1;
+static FILE *debugfp;
 
 static char *env_flushall = "NOCACHE_FLUSHALL";
 static char flushall;
@@ -80,12 +82,16 @@ static char flushall;
 static char *env_max_fds = "NOCACHE_MAX_FDS";
 static rlim_t max_fd_limit = 1 << 20;
 
-#define DEBUG(...) \
-    do { \
-        if(debugfp != NULL) { \
-            fprintf(debugfp, "[nocache] DEBUG: " __VA_ARGS__); \
-        } \
-    } while(0)
+void debug(const char *fmt, ...)
+{
+    if(debugfp != NULL) {
+        va_list args;
+
+        va_start(args, fmt);
+        vfprintf(debugfp, fmt, args);
+        va_end(args);
+    }
+}
 
 static void init(void)
 {
