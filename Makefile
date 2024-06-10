@@ -14,7 +14,7 @@ NOCACHE_BINS=nocache.o fcntl_helpers.o pageinfo.o wrappers.o
 MANPAGES=$(wildcard man/*.1)
 
 CC ?= gcc
-CFLAGS+= -Wall
+CFLAGS+= -Wall -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
 COMPILE = $(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 .PHONY: all
