@@ -26,9 +26,6 @@ static void init_mutexes(void);
 static void init_debugging(void);
 static void handle_stdout(void);
 
-static void store_pageinfo(int fd);
-static void free_unclaimed_pages(int fd, bool block_signals);
-
 int open(const char *pathname, int flags, mode_t mode);
 int open64(const char *pathname, int flags, mode_t mode);
 int creat(const char *pathname, int flags, mode_t mode);
@@ -437,7 +434,7 @@ int fclose(FILE *fp)
     return nocache_EOF;
 }
 
-static void store_pageinfo(int fd)
+void store_pageinfo(int fd)
 {
     sigset_t mask, old_mask;
 
@@ -486,7 +483,7 @@ static void store_pageinfo(int fd)
     return;
 }
 
-static void free_unclaimed_pages(int fd, bool block_signals)
+void free_unclaimed_pages(int fd, bool block_signals)
 {
     struct stat st;
     sigset_t mask, old_mask;
