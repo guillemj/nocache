@@ -6,4 +6,7 @@
 
 void debug(const char *fmt, ...);
 
+extern int nocache_EOF;
+int nocache_fileno(FILE *fp);
+
 #endif

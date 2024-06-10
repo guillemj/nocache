@@ -72,6 +72,8 @@ static size_t PAGESIZE;
 static char *env_nr_fadvise = "NOCACHE_NR_FADVISE";
 static int nr_fadvise;
 
+int nocache_EOF;
+
 static char *env_debugfd = "NOCACHE_DEBUGFD";
 static int debugfd = -1;
 static FILE *debugfp;
@@ -81,6 +83,11 @@ static char flushall;
 
 static char *env_max_fds = "NOCACHE_MAX_FDS";
 static rlim_t max_fd_limit = 1 << 20;
+
+int nocache_fileno(FILE *fp)
+{
+    return fileno(fp);
+}
 
 void debug(const char *fmt, ...)
 {
@@ -147,6 +154,7 @@ static void init(void)
     }
 
     PAGESIZE = getpagesize();
+    nocache_EOF = EOF;
     pthread_mutex_lock(&fds_iter_lock);
     for(i = 0; i < max_fds; i++) {
         pthread_mutex_lock(&fds_lock[i]);
@@ -389,7 +397,7 @@ FILE *fopen(const char *path, const char *mode)
     DEBUG("fopen(path=%s, mode=%s)\n", path, mode);
 
     if((fp = _original_fopen(path, mode)) != NULL)
-        if((fd = fileno(fp)) != -1)
+        if((fd = nocache_fileno(fp)) != -1)
             store_pageinfo(fd);
 
     return fp;
@@ -408,7 +416,7 @@ FILE *fopen64(const char *path, const char *mode)
     DEBUG("fopen64(path=%s, mode=%s)\n", path, mode);
 
     if((fp = _original_fopen64(path, mode)) != NULL)
-        if((fd = fileno(fp)) != -1)
+        if((fd = nocache_fileno(fp)) != -1)
             store_pageinfo(fd);
 
     return fp;
@@ -421,12 +429,12 @@ int fclose(FILE *fp)
     assert(_original_fclose != NULL);
 
     if(_original_fclose) {
-        free_unclaimed_pages(fileno(fp), true);
+        free_unclaimed_pages(nocache_fileno(fp), true);
         return _original_fclose(fp);
     }
 
     errno = EFAULT;
-    return EOF;
+    return nocache_EOF;
 }
 
 static void store_pageinfo(int fd)
